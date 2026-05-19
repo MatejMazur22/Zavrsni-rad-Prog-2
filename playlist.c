@@ -1,153 +1,269 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "playlist.h"
+#include "pjesma.h"
 
-int generirajNoviID() {
+const char* POPIS_PLAYLISTI = "playliste.txt";
 
-    FILE* fp = fopen("playliste.txt", "r");
+int generirajID() {
 
-    if (fp == NULL) {
+	FILE* fp = fopen(POPIS_PLAYLISTI, "r");
 
-        return 1;
-    }
+	if (fp == NULL) {
 
-    PLAYLISTA p;
+		return 1;
 
-    int zadnjiID = 0;
+	}
 
-    while (fscanf(fp, "%d;%99[^\n]\n", &p.id, p.naziv) == 2) {
 
-        zadnjiID = p.id;
-    }
+	PLAYLISTA p;
+	int zadnjiID = 0;
 
-    fclose(fp);
+	while (fscanf(fp, "%d;%99[^\n]\n", &p.id, p.naziv) == 2) { // cita indeks;naziv -> broj pa ; i onda maks 99 znakova dok ne dodje do '\n' (dok ne ucita oba dva parametra, i id i naziv)
 
-    return zadnjiID + 1;
+		zadnjiID = p.id;
+
+	}
+
+	fclose(fp);
+
+	return zadnjiID + 1;
+
+
 }
+
+
+int postojiLiPlaylista() {
+
+	FILE* fp = fopen(POPIS_PLAYLISTI, "r");
+
+	if (fp == NULL) {
+
+		return 0;
+
+	}
+
+	char redak[100];
+
+	// Provjera ima li ikakav redak u datoteci popisa playlisti
+	if (fgets(redak, sizeof(redak), fp) != NULL) {
+
+		fclose(fp);
+		return 1;
+
+	}
+
+	fclose(fp);
+	// Datoteka postoji ali je prazna jer je datoteka fp == NULL
+	return 0;
+
+}
+
 
 void kreirajPlaylistu() {
 
-    PLAYLISTA p;
+	PLAYLISTA p;
 
-    p.id = generirajNoviID();
+	p.id = generirajID();
 
-    getchar();
+	getchar(); // ako se dogodi slucajni '\n'
 
-    printf("Unesite naziv playliste: ");
+	printf("Unesite naziv playliste: ");
 
-    fgets(p.naziv, MAX_NAZIV, stdin);
+	fgets(p.naziv, MAX_NAZIV, stdin);
 
-    p.naziv[strcspn(p.naziv, "\n")] = 0;
 
-    char imeDatoteke[50];
+	p.naziv[strcspn(p.naziv, "\n")] = 0; // strcspn -> trazi 1. pojavu nekog znaka iz jednog stringa u drugom
 
-    sprintf(imeDatoteke, "playlist_%d.txt", p.id);
+	char imeDatoteke[50];
 
-    FILE* fp = fopen(imeDatoteke, "w");
+	sprintf(imeDatoteke, "playlist_%d.txt", p.id); // ispis kao printf, samo ispisuje u string
 
-    if (fp == NULL) {
+	FILE* fp = fopen(imeDatoteke, "w");
 
-        printf("Greska kod kreiranja playliste.\n");
-        return;
-    }
+	if (fp == NULL) {
 
-    fprintf(fp, "PLAYLISTA: %s\n", p.naziv);
+		printf("Greska pri kreiranju Playliste.\n");
+		return;
 
-    fclose(fp);
+	}
 
-    FILE* popis = fopen("playliste.txt", "a");
+	fprintf(fp, "PLAYLISTA: %s\n", p.naziv);
+	fclose(fp);
 
-    if (popis == NULL) {
+	FILE* popis = fopen(POPIS_PLAYLISTI, "a"); // "a" za pretrazivanje
 
-        printf("Greska kod spremanja playliste.\n");
-        return;
-    }
+	if (popis == NULL) {
 
-    fprintf(popis, "%d;%s\n", p.id, p.naziv);
+		printf("Greska pri spremanju playliste.\n");
+		return;
 
-    fclose(popis);
+	}
 
-    printf("\nPlaylista uspjesno kreirana.\n");
-    printf("Dodijeljeni ID: %d\n", p.id);
+	fprintf(popis, "%d;%s\n", p.id, p.naziv);
+
+	fclose(popis);
+
+	printf("\nPlaylista je uspjesno kreirana.\n");
+	printf("ID: %d, Naziv: %s", p.id, p.naziv);
+
+
 }
+
 
 void ispisiPlayliste() {
 
-    FILE* fp = fopen("playliste.txt", "r");
 
-    if (fp == NULL) {
+	FILE* fp = fopen(POPIS_PLAYLISTI, "r");
 
-        printf("Nema spremljenih playlista.\n");
-        return;
-    }
+	if (fp == NULL) {
 
-    PLAYLISTA p;
+		printf("Nema spremljenih playlista.\n");
+		return;
 
-    int postojiPlaylista = 0;
+	}
 
-    while (fscanf(fp, "%d;%99[^\n]\n", &p.id, p.naziv) == 2) { // ako se nigdje u datoteci ne pronadju id i naziv playliste (playlista ne postoji) -> ne postoji ni jedna playlista ˇ
+	PLAYLISTA p;
 
-        if (postojiPlaylista == 0) {
+	int postojiPlaylista = 0;
 
-            printf("\n===== POSTOJECE PLAYLISTE =====\n");
+	while (fscanf(fp, "%d;%99[^\n]\n", &p.id, &p.naziv) == 2) { // provjerava ako se nigdje u datoteci ne pronadje id i naziv neke playliste, znaci ne postoje.
 
-            postojiPlaylista = 1;
-        }
+		if (postojiPlaylista == 0) {
 
-        printf("ID: %d | Naziv: %s\n", p.id, p.naziv);
-    }
+			printf("\n -----LISTA PLAYLISTI-----\n");
 
-    if (postojiPlaylista == 0) {
+			postojiPlaylista = 1;
 
-        printf("Nema spremljenih playlista.\n");
-    }
+		}
 
-    fclose(fp);
+		printf("ID: %d | Naziv: %s\n", p.id, p.naziv);
+
+	}
+
+	if (postojiPlaylista == 0) {
+
+		printf("Nema spremljenih playlisti!\n");
+
+	}
+
+	fclose(fp);
+
+
 }
+
 
 void obrisiPlaylistu() {
 
-    ispisiPlayliste();
+	ispisiPlayliste();
 
-    int trazeniID;
+	int trazeniID;
 
-    printf("\nUnesite ID playliste za brisanje: ");
-    scanf("%d", &trazeniID);
 
-    FILE* fp = fopen("playliste.txt", "r");
-    FILE* temp = fopen("temp.txt", "w");
+	printf("\nUnesite ID playliste za brisanje: ");
+	scanf("%d", &trazeniID);
 
-    if (fp == NULL || temp == NULL) {
+	FILE* fp = fopen(POPIS_PLAYLISTI, "r");
+	FILE* temp = fopen("temp.txt", "w");
 
-        printf("Greska kod datoteka.\n");
-        return;
-    }
+	if (fp == NULL || temp == NULL) {
 
-    PLAYLISTA p;
+		printf("Greska pri otvaranju datoteka.\n");
+		return;
 
-    while (fscanf(fp, "%d;%99[^\n]\n", &p.id, p.naziv) == 2) {
+	}
 
-        if (p.id != trazeniID) {
+	PLAYLISTA p;
 
-            fprintf(temp, "%d;%s\n", p.id, p.naziv);
-        }
-    }
+	while (fscanf(fp, "%d;%99[^\n]\n", &p.id, &p.naziv) == 2) {
 
-    fclose(fp);
-    fclose(temp);
+		if (p.id != trazeniID) {
 
-    remove("playliste.txt");
-    rename("temp.txt", "playliste.txt");
+			fprintf(temp, "%d; %s\n", p.id, p.naziv);
 
-    char imeDatoteke[50];
+		}
 
-    sprintf(imeDatoteke, "playlist_%d.txt", trazeniID);
+	}
 
-    remove(imeDatoteke);
+	fclose(fp);
+	fclose(temp);
+	remove(POPIS_PLAYLISTI);
+	rename("temp.txt", POPIS_PLAYLISTI);
 
-    printf("Playlista obrisana.\n");
+	char imeDatoteke[50];
+
+	sprintf(imeDatoteke, "playlist_%d.txt", trazeniID);
+
+	remove(imeDatoteke);
+
+	printf("Playlista je obrisana.\n");
+
+	/*
+
+	Trazi se upis ID za brisanje
+	Otvara se datoteka s popisom playlisti
+	Traži se ako postoji ta playlista -> while petlja
+	zamjenjuju se datoteke temp i playliste (temp postaje playliste.txt bez playliste s trazenim ID-em)
+	brise se datoteka playliste s trazenim ID-em
+
+	*/
+
+
+}
+
+void dodajPjesmu() {
+
+	if (!postojiLiPlaylista()) {
+
+		printf("Prvo morate kreirati barem jednu playlistu!\n");
+		return;
+
+	}
+
+	ispisiPlayliste();
+
+	int id;
+
+	printf("\nUnesite ID playliste: ");
+	scanf("%d", &id);
+
+	getchar();
+
+	PJESMA p;
+
+	printf("Ime pjesme: ");
+	fgets(p.ime, MAX_IME, stdin);
+	p.ime[strcspn(p.ime, "\n")] = 0; // prva pojava znaka '\n' postaje znak '\0' (kraj stringa)
+
+	printf("Izvodac ");
+	fgets(p.izvodac, MAX_IME, stdin);
+	p.ime[strcspn(p.izvodac, "\n")] = 0;
+
+	printf("Trajanje: ");
+	scanf("%f", &p.trajanje);
+
+	char imeDatoteke[50];
+
+	sprintf(imeDatoteke, "playlist_%d.txt", id);
+
+	FILE* fp = fopen(imeDatoteke, "a");
+
+	if (fp == NULL) {
+
+		printf("Playlista ne postoji.\n");
+		return;
+
+	}
+
+	fprintf(fp, "%s;%s;%.2f\n", p.ime, p.izvodac, p.trajanje);
+
+	fclose(fp);
+
+	printf("Pjesma uspjesno dodana.\n");
+
+
 }
