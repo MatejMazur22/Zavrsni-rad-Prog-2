@@ -12,8 +12,6 @@ static inline void safeFree(void** ptr) {
 
 	}
 
-	// Funkcija oslobadja din. zauzetu memoriju
-
 }
 
 
@@ -41,6 +39,7 @@ void ispisiPjesme(int id);
 void sortirajPjesme(int id);
 void pretraziPjesmu(int id, char* trazeno);
 void obrisiSvePjesme();
+void preimenujPjesmu();
 
 PJESMA* ucitajPjesme(int id, int* n);
 

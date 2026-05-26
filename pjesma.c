@@ -12,7 +12,10 @@ void  ponavljanje_ispisa(PJESMA* niz, int ID, int n) {
 
 	if (ID >= n) return;
 
-	printf("%s - %s (%.2f)\n", niz[ID].izvodac, niz[ID].ime, niz[ID].trajanje);
+	printf("%s - %s (%.2f)\n", 
+		niz[ID].izvodac, 
+		niz[ID].ime, 
+		niz[ID].trajanje);
 
 	ponavljanje_ispisa(niz, ID + 1, n);
 
@@ -22,13 +25,13 @@ PJESMA* ucitajPjesme(int id, int* n) {
 
 
 	char file[50];
-	sprintf(file, "playlist_%d.txt", id); // ispis kao printf, samo ispisuje u string
+	sprintf(file, "playlist_%d.txt", id);
 
 	FILE* fp = fopen(file, "r");
 
 	if (fp == NULL) {
 
-		perror("Greska pri otvaranju playliste");
+		perror("\nGreska pri otvaranju playliste!\n");
 		*n = 0;
 		return NULL;
 
@@ -40,11 +43,11 @@ PJESMA* ucitajPjesme(int id, int* n) {
 	char izvodac[MAX_IME];
 	float trajanje;
 
-	while (fscanf(fp, "%99[^;]°;%99[^;];%f\n", ime, izvodac, &trajanje) == 3) {
+	while (fscanf(fp, "%99[^;];%99[^;];%f\n", ime, izvodac, &trajanje) == 3) {
 
 		count++;
 
-	} // Preborajavanje pjesama, ako ima sva tri parametra (ime, izvodac, trajanje) onda se count povecava za 1
+	}
 
 	if (count == 0) {
 
@@ -58,14 +61,14 @@ PJESMA* ucitajPjesme(int id, int* n) {
 
 	if (niz == NULL) {
 
-		perror("Neuspjesno zauzeta memorija!");
+		perror("\nNeuspjesno zauzeta memorija!\n");
 		fclose(fp);
 		*n = 0;
 		return NULL;
 
 	}
 
-	rewind(fp); // vraca pok na pocetak file fp
+	rewind(fp);
 
 	int i = 0;
 	while (fscanf(fp, "%99[^;];%99[^;];%f\n", niz[i].ime, niz[i].izvodac, &niz[i].trajanje) == 3) {
@@ -76,7 +79,7 @@ PJESMA* ucitajPjesme(int id, int* n) {
 
 	if (ferror(fp)) {
 
-		perror("Greska pri citanju datoteke.");
+		perror("\nGreska pri citanju datoteke.\n");
 
 	}
 
@@ -89,6 +92,62 @@ PJESMA* ucitajPjesme(int id, int* n) {
 
 }
 
+
+void dodajPjesmu() {
+
+	if (!postojiLiPlaylista()) {
+
+		printf("\nPrvo morate kreirati barem jednu playlistu!\n");
+		return;
+
+	}
+
+	ispisiPlayliste();
+
+	int id;
+
+	printf("\nUnesite ID playliste: ");
+	scanf("%d", &id);
+
+	getchar();
+
+	PJESMA p;
+
+	printf("Ime pjesme: ");
+	fgets(p.ime, MAX_IME, stdin);
+	p.ime[strcspn(p.ime, "\n")] = 0;
+
+	printf("Izvodac: ");
+	fgets(p.izvodac, MAX_IME, stdin);
+	p.izvodac[strcspn(p.izvodac, "\n")] = 0;
+
+	printf("\nTrajanje (npr. 2.15 za 2 min 15 sec): ");
+	scanf("%f", &p.trajanje);
+	getchar();
+
+	char imeDatoteke[50];
+
+	sprintf(imeDatoteke, "playlist_%d.txt", id);
+
+	FILE* fp = fopen(imeDatoteke, "a");
+
+	if (fp == NULL) {
+
+		printf("\nPlaylista ne postoji.\n");
+		return;
+
+	}
+
+	fprintf(fp, "%s;%s;%.2f\n", p.ime, p.izvodac, p.trajanje);
+
+	fclose(fp);
+
+	printf("\nPjesma uspjesno dodana.\n");
+
+
+}
+
+
 void ispisiPjesme(int id) {
 
 	int n;
@@ -96,12 +155,12 @@ void ispisiPjesme(int id) {
 
 	if (niz == NULL || n == 0) {
 
-		printf("Nema pjesama ili playlista ne postoji.\n");
+		printf("\nNema pjesama ili playlista ne postoji.\n");
 		return;
 
 	}
 
-	printf("\n--Pjesme--\n");
+	printf("\n---- Pjesme ----\n");
 
 	ponavljanje_ispisa(niz, 0, n);
 
@@ -143,7 +202,7 @@ void sortirajPjesme(int id) {
 
 	if (niz == NULL || n == 0) {
 
-		printf("Nema pjesama.");
+		printf("\nNema pjesama.\n");
 
 		return;
 
@@ -235,7 +294,85 @@ void pretraziPjesmu(int id, char* trazeno) {
 
 void obrisiPjesmu() {
 
+	int idPlaylist;
+	int trazeno;
 
+	ispisiPlayliste();
+
+
+	printf("Unesite ID playliste: ");
+	if (scanf("%d", &idPlaylist) != 1) {
+
+		printf("Pogresan unos!\n");
+		CLEAR_BUFFER();
+		return;
+
+	}
+
+	
+	printf("Unesite ID pjesme za brisanje: ");
+	if (scanf("%d", &trazeno)) {
+
+		printf("Pogresan unos!\n");
+		CLEAR_BUFFER();
+		return;
+
+	}
+
+	CLEAR_BUFFER();
+
+	char file[50], tempFile[50];
+
+	sprintf(file, "playlist_%d.txt", idPlaylist);
+	sprintf(tempFile, "temp_%d.txt", idPlaylist);
+
+	FILE* fp = fopen(file, "r");
+	FILE* temp = fopen(tempFile, "w");
+
+	if (!fp || !temp) {
+
+		printf("Greska pri otvaranju datoteka.\n");
+		if (fp) fclose(fp);
+		if (temp) fclose(temp);
+		return;
+
+	}
+
+	PJESMA p;
+	int trenutno = 0;
+	int pronadeno = 0;
+
+	while (fscanf(fp, "%99[^;];%99[^;];%f\n", p.ime, p.izvodac, &p.trajanje) == 3) {
+
+		trenutno++;
+
+		if (trenutno == trazeno) {
+
+			pronadeno = 1;
+			continue;
+
+		}
+
+		fprintf(temp, "%s;%s;%.2f\n", p.ime, p.izvodac, p.trajanje);
+
+
+	}
+
+	fclose(fp);
+	fclose(temp);
+
+	remove(file);
+	rename(tempFile, file);
+
+	if (pronadeno) {
+
+		printf("Pjesma je obrisana.\n");
+
+	} else {
+
+		printf("ID pjesme ne postoji.\n");
+
+	}
 
 }
 
@@ -243,15 +380,16 @@ void prebaciPjesmu() {
 
 	int izvorID, odredID;
 
-	printf("Izvor playlist ID: ");
+	ispisiPlayliste();
 
+	printf("Odaberite ID playlist-e za prijenos: ");
 	if (scanf("%d", &izvorID) != 1) {
 		printf("Pogresan unos!\n");
 		CLEAR_BUFFER();
 		return;
 	}
 
-	printf("Odredisni playlist ID: ");
+	printf("Odaberite ID playlist-e za odrediste: ");
 
 	if (scanf("%d", &odredID) != 1) {
 		printf("Pogresan unos!\n");
@@ -276,6 +414,8 @@ void prebaciPjesmu() {
 
 	char trazeno[MAX_IME];
 
+	ispisiPjesme(izvorID);
+
 	printf("Naziv pjesme za prebacivanje: ");
 	fgets(trazeno, MAX_IME, stdin);
 	trazeno[strcspn(trazeno, "\n")] = 0;
@@ -292,7 +432,6 @@ void prebaciPjesmu() {
 
 		if (strcmp(p.ime, trazeno) == 0) {
 
-			// PREBACI u drugu playlistu
 			fprintf(odred,
 				"%s;%s;%.2f\n",
 				p.ime,
@@ -303,7 +442,6 @@ void prebaciPjesmu() {
 		}
 		else {
 
-			// ostaje u izvornoj
 			fprintf(temp,
 				"%s;%s;%.2f\n",
 				p.ime,
@@ -336,6 +474,8 @@ void obrisiSvePjesme() {
 
 	int id;
 
+	ispisiPlayliste();
+
 	printf("ID playliste: ");
 
 	if (scanf("%d", &id) != 1) {
@@ -354,9 +494,92 @@ void obrisiSvePjesme() {
 		return;
 	}
 
-	// prepisuje prazno -> briše sve pjesme
 	fclose(fp);
 
 	printf("Sve pjesme obrisane iz playliste.\n");
+
+}
+
+
+void preimenujPjesmu() {
+
+	int id;
+	char staroIme[MAX_IME];
+	char novoIme[MAX_IME];
+
+	ispisiPlayliste();
+
+	printf("Unesite ID playliste: ");
+	if (scanf("%d", &id) != 1) {
+
+		printf("Pogresan unos!\n");
+		CLEAR_BUFFER();
+		return;
+
+	}
+
+	CLEAR_BUFFER();
+
+	printf("\n ----Trenutne pjesme ----");
+	ispisiPjesme(id);
+
+	printf("/nUnesite trenutno ime pjesme: ");
+	fgets(staroIme, MAX_IME, stdin);
+	staroIme[strcspn(staroIme, "\n")] = 0;
+
+	printf("/nUnesite novo ime pjesme: ");
+	fgets(novoIme, MAX_IME, stdin);
+	novoIme[strcspn(novoIme, "\n")] = 0;
+
+	char file[50];
+	sprintf(file, "playlist_%d.txt", id);
+
+	FILE* fp = fopen(file, "r");
+	FILE* temp = fopen("temp.txt", "w");
+
+	if (!fp || !temp) {
+
+		printf("\nGreska pri otvaranju datoteka!\n");
+		if (fp) fclose(fp);
+
+		if (temp) fclose(temp);
+		
+		return;
+
+	}
+
+	PJESMA p; 
+	int found = 0;
+
+	while (fscanf(fp, "%99[^;];%99[^;];%f\n", p.ime, p.izvodac, &p.trajanje) == 3) {
+
+		if (strcmp(p.ime, staroIme) == 0) {
+
+			strcpy(p.ime, novoIme);
+			found = 1;
+
+		}
+
+		fprintf(temp, "%s;%s;%.2f\n", p.ime, p.izvodac, p.trajanje);
+
+	}
+
+
+	fclose(fp);
+	fclose(temp);
+
+	remove(file);
+	rename("temp.txt", file);
+
+
+	if (found) {
+
+		printf("\nPjesma je uspjesno preimenovana.\n");
+
+	} else {
+
+		printf("\nPjesma nije pronadjena.\n");
+
+	}
 
 }

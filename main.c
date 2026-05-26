@@ -18,15 +18,16 @@ int main() {
 		printf("1. Kreiraj playlistu\n");
 		printf("2. Ispisi sve playliste\n");
 		printf("3. Obrisi playlistu\n");
+		printf("4. Preimenuj playlistu\n");
 		printf("\nPJESME:\n");
-		printf("4. Dodaj pjesme\n");
-		printf("5. Ispisi pjesme\n");
-		printf("6. Obrisi pjesmu\n");
-		printf("7. Prebaci pjesmu\n");
-		printf("8. Sortiraj pjesme\n");
-		printf("9. Pretrazi pjesmu\n");
-		// DODAJ UREDIVANJE PJESAMA!!!
-		printf("10. Obrisi sve pjesme\n");
+		printf("5. Dodaj pjesme\n");
+		printf("6. Ispisi pjesme\n");
+		printf("7. Obrisi pjesmu\n");
+		printf("8. Prebaci pjesmu\n");
+		printf("9. Sortiraj pjesme\n");
+		printf("10. Pretrazi pjesmu\n");
+		printf("11. Obrisi sve pjesme\n");
+		printf("12. Preimenuj pjesmu\n");
 
 		printf("0. Izlaz\n");
 
@@ -46,8 +47,12 @@ int main() {
 			obrisiPlaylistu();
 			break;
 		case 4:
-			dodajPjesmu();
+			preimenujPlaylistu();
+			break;
 		case 5:
+			dodajPjesmu();
+			break;
+		case 6:
 
 			if (!postojiLiPlaylista()) {
 
@@ -58,6 +63,7 @@ int main() {
 
 			int ID_ispis;
 
+			ispisiPlayliste();
 			printf("Unesite ID playliste koju zelite ispisati: ");
 			if (scanf("%d", &ID_ispis) != 1) {
 
@@ -70,22 +76,23 @@ int main() {
 			ispisiPjesme(ID_ispis);
 			break;
 
-		case 6:
+		case 7:
 
 			obrisiPjesmu();
 			break;
 
-		case 7:
+		case 8:
 
-			prebaciPjesmu(); // zavrsi ovo!
+			prebaciPjesmu();
 			break;
 
-		case 8: {
+		case 9: {
 
 			int id_sort;
 
+			ispisiPlayliste();
+
 			printf("Unesite ID playliste: ");
-			
 			if (scanf("%d", &id_sort) != 1) {
 
 				printf("Pogresan unos!\n");
@@ -98,7 +105,7 @@ int main() {
 			sortirajPjesme(id_sort);
 			break;
 		}
-		case 9: {
+		case 10: {
 
 			int id_pret;
 			char trazeno[MAX_IME];
@@ -116,14 +123,19 @@ int main() {
 			printf("Unesite naziv pjesme za pretrazivanje: ");
 			fgets(trazeno, MAX_IME, stdin);
 
-			trazeno[strcspn(trazeno, "\n")] = 0;
+			trazeno[strcspn(trazeno, '\n')] = 0;
 
 			pretraziPjesmu(id_pret, trazeno);
 			break;
 		}
-		case 10:
+		case 11:
 
-			obrisiSvePjesme(); // zavrsi ovo!
+			obrisiSvePjesme();
+			break;
+
+		case 12:
+
+			preimenujPjesmu();
 			break;
 
 		case 0: 

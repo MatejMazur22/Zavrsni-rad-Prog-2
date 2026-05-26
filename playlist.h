@@ -19,6 +19,7 @@ void kreirajPlaylistu();
 void ispisiPlayliste();
 void obrisiPlaylistu();
 int postojiLiPlaylista();
+void preimenujPlaylistu();
 
 
 #endif
