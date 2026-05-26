@@ -110,6 +110,9 @@ int main() {
 			int id_pret;
 			char trazeno[MAX_IME];
 
+			ispisiPlayliste();
+
+			printf("\nUnesite id playliste za pretrazivanje: ");
 			if (scanf("%d", &id_pret) != 1) {
 
 				printf("Pogresan unos!\n");
@@ -120,10 +123,12 @@ int main() {
 
 			CLEAR_BUFFER();
 
+			ispisiPjesme(id_pret);
+
 			printf("Unesite naziv pjesme za pretrazivanje: ");
 			fgets(trazeno, MAX_IME, stdin);
 
-			trazeno[strcspn(trazeno, '\n')] = 0;
+			trazeno[strcspn(trazeno, "\n")] = 0;
 
 			pretraziPjesmu(id_pret, trazeno);
 			break;

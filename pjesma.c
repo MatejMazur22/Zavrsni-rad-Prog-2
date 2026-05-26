@@ -279,11 +279,11 @@ void pretraziPjesmu(int id, char* trazeno) {
 
 	if (rezultat == NULL) { 
 
-		printf("Pjesma nije pronadena.");
+		printf("\nPjesma nije pronadena.\n");
 
 	} else {
 
-		printf("Pronadena pjesma: ");
+		printf("\nPronadena pjesma: \n");
 		printf("%s - %s (%.2f)", (*rezultat).izvodac, (*rezultat).ime, (*rezultat).trajanje);
 
 	}
